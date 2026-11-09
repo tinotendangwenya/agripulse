@@ -84,10 +84,12 @@ async function farmDetail(id) {
         ${input('Expected harvest', 'expectedHarvestDate', 'type="date"')}
         <div class="col-12"><button class="btn btn-success w-100">Add crop</button></div>
       </form></div></div>
+    ${leafCard()}
     ${weather}
     <button class="btn btn-outline-danger btn-sm mt-3" id="delFarm">Delete this farm</button>`;
 
   $('back').onclick = () => run(farms());
+  bindLeaf(id);
   view.querySelectorAll('[data-delcrop]').forEach(b => b.onclick = async () => {
     if (!confirm('Delete this crop?')) return;
     try { await API.del(`/api/farms/${id}/crops/${b.dataset.delcrop}`); run(farmDetail(id)); } catch (e) { alert(e.message); }
