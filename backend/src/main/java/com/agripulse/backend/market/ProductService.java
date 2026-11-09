@@ -1,5 +1,9 @@
 package com.agripulse.backend.market;
 
+/**
+ * Services (business rules: validation, pricing snapshots, stock control)
+ */
+
 import com.agripulse.backend.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;

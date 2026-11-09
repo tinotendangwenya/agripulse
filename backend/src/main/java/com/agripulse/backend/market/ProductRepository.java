@@ -1,5 +1,9 @@
 package com.agripulse.backend.market;
 
+/**
+ * Entities and repositories (database mapping and queries)
+ */
+
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

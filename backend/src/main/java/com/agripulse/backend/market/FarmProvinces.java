@@ -1,5 +1,9 @@
 package com.agripulse.backend.market;
 
+/**
+ * Services (business rules: validation, pricing snapshots, stock control)
+ */
+
 import java.util.Optional;
 import java.util.Set;
 

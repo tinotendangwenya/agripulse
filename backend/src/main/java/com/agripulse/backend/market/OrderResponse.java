@@ -1,5 +1,9 @@
 package com.agripulse.backend.market;
 
+/**
+ * Request and response objects (what the API accepts and returns)
+ */
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 

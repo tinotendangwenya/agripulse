@@ -1,5 +1,9 @@
 package com.agripulse.backend.market;
 
+/**
+ * Entities and repositories (database mapping and queries)
+ */
+
 import com.agripulse.backend.user.User;
 import jakarta.persistence.*;
 import lombok.Getter;

@@ -1,5 +1,10 @@
 package com.agripulse.backend.market;
 
+/**
+ * Controllers. Farmers manage listings and respond to orders, and buyers
+ * place and cancel orders. The user id always comes from the token.
+ */
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

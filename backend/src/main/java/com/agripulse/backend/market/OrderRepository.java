@@ -1,5 +1,9 @@
 package com.agripulse.backend.market;
 
+/**
+ * Entities and repositories (database mapping and queries)
+ */
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
