@@ -5,3 +5,7 @@ target/
 node_modules/
 .vscode/
 *.log
+
+ai-service/*.jpg
+ai-service/*.jpeg
+ai-service/*.png
