@@ -5,3 +5,5 @@ body { background: #f4f7f4; }
 .nav-pills .nav-link { color: #2e4a35; white-space: nowrap; }
 .card { border: 0; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
 main { max-width: 760px; }
+img.qimg { max-width: 100%; max-height: 320px; border-radius: 6px; cursor: pointer; display: block; }
+@media print { nav, .navbar, .btn, form, #tabs { display: none !important; } body { background: #fff; } }

@@ -3,8 +3,8 @@ package com.agripulse.backend.weather;
 import java.util.Map;
 
 /** Approximate province centres, used only when a farm has no coordinates. */
-final class ProvinceLocations {
-    static final Map<String, double[]> CENTRES = Map.of(
+public final class ProvinceLocations {
+    public static final Map<String, double[]> CENTRES = Map.of(
             "Harare", new double[]{-17.83, 31.05},
             "Bulawayo", new double[]{-20.15, 28.58},
             "Manicaland", new double[]{-18.97, 32.67},

@@ -67,6 +67,9 @@ async function farmDetail(id) {
     <button class="btn btn-link px-0" id="back">&larr; All farms</button>
     <h5>${esc(farm.name)}</h5>
     <p class="text-muted">${esc(farm.province)}${farm.district ? ', ' + esc(farm.district) : ''}</p>
+    <div class="d-flex gap-2 mb-3">
+      <button class="btn btn-success flex-fill" id="recBtn">Farm records</button>
+      <button class="btn btn-outline-success flex-fill" id="askBtn">Ask an expert</button></div>
     <h6>Crops</h6>
     ${crops.length ? crops.map(c => `
       <div class="card mb-2"><div class="card-body d-flex justify-content-between align-items-start">
@@ -84,18 +87,18 @@ async function farmDetail(id) {
         ${input('Expected harvest', 'expectedHarvestDate', 'type="date"')}
         <div class="col-12"><button class="btn btn-success w-100">Add crop</button></div>
       </form></div></div>
-    ${leafCard()}
     ${weather}
     <button class="btn btn-outline-danger btn-sm mt-3" id="delFarm">Delete this farm</button>`;
 
   $('back').onclick = () => run(farms());
-  bindLeaf(id);
+  $('recBtn').onclick = () => run(records(id));
+  $('askBtn').onclick = () => run(askScreen(id));
   view.querySelectorAll('[data-delcrop]').forEach(b => b.onclick = async () => {
     if (!confirm('Delete this crop?')) return;
     try { await API.del(`/api/farms/${id}/crops/${b.dataset.delcrop}`); run(farmDetail(id)); } catch (e) { alert(e.message); }
   });
   $('delFarm').onclick = async () => {
-    if (!confirm('Delete this farm and all its crops?')) return;
+    if (!confirm('Delete this farm, its crops and ALL its records (money, harvests, animals)? This cannot be undone.')) return;
     try { await API.del('/api/farms/' + id); run(farms()); } catch (e) { alert(e.message); }
   };
   $('cropForm').onsubmit = submit(async f => {
@@ -265,13 +268,13 @@ async function prices() {
 
 /* ---------- Navigation: tabs depend on the user's role ---------- */
 const TABS = {
-  FARMER: [['farms', 'Farms'], ['listings', 'My listings'], ['orders', 'Orders'], ['market', 'Market'], ['prices', 'Prices']],
+  FARMER: [['farms', 'Farms'], ['questions', 'Ask an expert'], ['listings', 'My listings'], ['orders', 'Orders'], ['market', 'Market'], ['prices', 'Prices']],
   BUYER: [['market', 'Market'], ['myorders', 'My orders'], ['prices', 'Prices']],
   SUPPLIER: [['market', 'Market'], ['prices', 'Prices']],
-  EXPERT: [['market', 'Market'], ['prices', 'Prices']],
-  ADMIN: [['prices', 'Prices']]
+  EXPERT: [['queue', 'Questions'], ['market', 'Market'], ['prices', 'Prices']],
+  ADMIN: [['prices', 'Prices'], ['experts', 'Experts']]
 };
-const SCREENS = { farms, listings, orders, market, myorders, prices };
+const SCREENS = { farms, questions: questionsList, listings, orders, market, myorders, prices, queue: expertQueue, experts: adminExperts };
 
 function nav() {
   const tabs = TABS[me.role] || TABS.BUYER;

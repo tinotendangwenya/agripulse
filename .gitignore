@@ -9,3 +9,5 @@ node_modules/
 ai-service/*.jpg
 ai-service/*.jpeg
 ai-service/*.png
+
+backend/uploads/
