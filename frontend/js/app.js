@@ -268,13 +268,13 @@ async function prices() {
 
 /* ---------- Navigation: tabs depend on the user's role ---------- */
 const TABS = {
-  FARMER: [['farms', 'Farms'], ['questions', 'Ask an expert'], ['listings', 'My listings'], ['orders', 'Orders'], ['market', 'Market'], ['prices', 'Prices']],
-  BUYER: [['market', 'Market'], ['myorders', 'My orders'], ['prices', 'Prices']],
+  FARMER: [['farms', 'Farms'], ['questions', 'Ask an expert'], ['listings', 'My listings'], ['orders', 'Orders'], ['requests', 'Buyer requests'], ['market', 'Market'], ['prices', 'Prices']],
+  BUYER: [['market', 'Market'], ['requests', 'My requests'], ['myorders', 'My orders'], ['prices', 'Prices']],
   SUPPLIER: [['market', 'Market'], ['prices', 'Prices']],
   EXPERT: [['queue', 'Questions'], ['market', 'Market'], ['prices', 'Prices']],
   ADMIN: [['prices', 'Prices'], ['experts', 'Experts']]
 };
-const SCREENS = { farms, questions: questionsList, listings, orders, market, myorders, prices, queue: expertQueue, experts: adminExperts };
+const SCREENS = { farms, questions: questionsList, requests: requestsScreen, listings, orders, market, myorders, prices, queue: expertQueue, experts: adminExperts };
 
 function nav() {
   const tabs = TABS[me.role] || TABS.BUYER;
