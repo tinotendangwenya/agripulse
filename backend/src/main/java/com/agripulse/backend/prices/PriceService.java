@@ -21,13 +21,16 @@ public class PriceService {
             "Mashonaland West", "Masvingo", "Matabeleland North", "Matabeleland South", "Midlands");
 
     private final MarketPriceRepository prices;
+    private final PriceAlertService priceAlerts;
 
     @Transactional
     public PriceResponse add(Long adminId, PriceRequest r) {
         MarketPrice p = new MarketPrice();
         p.setEnteredBy(adminId);
         apply(p, r);
-        return PriceResponse.of(prices.save(p));
+        MarketPrice saved = prices.save(p);
+        priceAlerts.onNewPrice(saved);
+        return PriceResponse.of(saved);
     }
 
     @Transactional

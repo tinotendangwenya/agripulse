@@ -274,7 +274,7 @@ const TABS = {
   EXPERT: [['queue', 'Questions'], ['market', 'Market'], ['prices', 'Prices']],
   ADMIN: [['prices', 'Prices'], ['experts', 'Experts']]
 };
-const SCREENS = { farms, questions: questionsList, requests: requestsScreen, listings, orders, market, myorders, prices, queue: expertQueue, experts: adminExperts };
+const SCREENS = { farms, questions: questionsList, requests: requestsScreen, listings, orders, market, myorders, prices: priceHub, queue: expertQueue, experts: adminExperts };
 
 function nav() {
   const tabs = TABS[me.role] || TABS.BUYER;
