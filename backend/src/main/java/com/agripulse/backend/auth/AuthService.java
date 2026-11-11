@@ -15,7 +15,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AuthService {
     // ADMIN and EXPERT accounts are never self-registered
-    private static final Set<String> SELF_REGISTER = Set.of("FARMER", "BUYER", "SUPPLIER", "TRANSPORTER");
+    private static final Set<String> SELF_REGISTER = Set.of("FARMER", "BUYER", "SUPPLIER", "TRANSPORTER", "EQUIPMENT_OWNER");
 
     private final UserRepository users;
     private final RoleRepository roles;
