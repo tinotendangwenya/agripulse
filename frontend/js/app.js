@@ -268,13 +268,14 @@ async function prices() {
 
 /* ---------- Navigation: tabs depend on the user's role ---------- */
 const TABS = {
-  FARMER: [['farms', 'Farms'], ['questions', 'Ask an expert'], ['listings', 'My listings'], ['orders', 'Orders'], ['requests', 'Buyer requests'], ['market', 'Market'], ['prices', 'Prices']],
-  BUYER: [['market', 'Market'], ['requests', 'My requests'], ['myorders', 'My orders'], ['prices', 'Prices']],
-  SUPPLIER: [['market', 'Market'], ['prices', 'Prices']],
+  FARMER: [['farms', 'Farms'], ['questions', 'Ask an expert'], ['listings', 'My listings'], ['orders', 'Orders'], ['requests', 'Buyer requests'], ['transport', 'Transport'], ['market', 'Market'], ['prices', 'Prices']],
+  BUYER: [['market', 'Market'], ['requests', 'My requests'], ['myorders', 'My orders'], ['transport', 'Transport'], ['prices', 'Prices']],
+  SUPPLIER: [['transport', 'Transport'], ['market', 'Market'], ['prices', 'Prices']],
+  TRANSPORTER: [['jobs', 'Jobs'], ['vehicles', 'My vehicles'], ['prices', 'Prices']],
   EXPERT: [['queue', 'Questions'], ['market', 'Market'], ['prices', 'Prices']],
   ADMIN: [['prices', 'Prices'], ['experts', 'Experts']]
 };
-const SCREENS = { farms, questions: questionsList, requests: requestsScreen, listings, orders, market, myorders, prices: priceHub, queue: expertQueue, experts: adminExperts };
+const SCREENS = { farms, questions: questionsList, requests: requestsScreen, listings, orders, market, myorders, prices: priceHub, queue: expertQueue, experts: adminExperts, transport: transportScreen, vehicles: vehiclesScreen, jobs: jobsScreen };
 
 function nav() {
   const tabs = TABS[me.role] || TABS.BUYER;
