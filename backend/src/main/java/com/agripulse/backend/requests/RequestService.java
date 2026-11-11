@@ -9,6 +9,7 @@ import com.agripulse.backend.user.User;
 import com.agripulse.backend.user.UserRepository;
 import com.agripulse.backend.weather.ProvinceLocations;
 import lombok.RequiredArgsConstructor;
+import com.agripulse.backend.notifications.NotificationService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,7 @@ public class RequestService {
     private final ProductRepository products;
     private final OrderRepository orders;
     private final UserRepository users;
+    private final NotificationService notifier;
 
     // ---------- buyer ----------
     @Transactional
@@ -71,7 +73,16 @@ public class RequestService {
         p.setNeededBy(r.neededBy());
         p.setNote(r.note());
         p.setUpdatedAt(LocalDateTime.now());
-        return view(requests.save(p));
+        PurchaseRequest saved = requests.save(p);
+        Set<Long> sellers = new LinkedHashSet<>();
+        BigDecimal cap = saved.getMaxPrice() == null ? NO_LIMIT : saved.getMaxPrice();
+        for (Product pr : products.search(saved.getProductName(), "", saved.getCurrency(), cap, PageRequest.of(0, 50)))
+            if (pr.getUnit().equals(saved.getUnit())) sellers.add(pr.getSeller().getId());
+        for (Long sid : sellers)
+            notifier.send(sid, "REQUEST", "A buyer wants " + saved.getProductName(),
+                    saved.getQuantity() + " " + saved.getUnit() + " wanted in " + saved.getProvince()
+                            + ". It matches one of your listings.", "requests");
+        return view(saved);
     }
 
     @Transactional(readOnly = true)
@@ -127,9 +138,15 @@ public class RequestService {
         o.setStatus("ACCEPTED");
         o.setOrderId(order.getId());
         for (PurchaseOffer other : offers.findByRequestIdOrderByIdDesc(requestId))
-            if (!other.getId().equals(o.getId()) && "PENDING".equals(other.getStatus())) other.setStatus("REJECTED");
+            if (!other.getId().equals(o.getId()) && "PENDING".equals(other.getStatus())) {
+                other.setStatus("REJECTED");
+                notifier.send(other.getFarmerId(), "OFFER", "Offer not chosen",
+                        "The buyer chose another offer for " + r.getProductName() + ".", "requests");
+            }
         r.setStatus("FULFILLED");
         r.setUpdatedAt(LocalDateTime.now());
+        notifier.send(o.getFarmerId(), "OFFER", "Your offer was accepted",
+                "A confirmed order was created for " + r.getProductName() + ". See Orders.", "orders");
         return offerView(o);
     }
 
@@ -140,6 +157,7 @@ public class RequestService {
         if (!"PENDING".equals(o.getStatus()))
             throw new ResponseStatusException(HttpStatus.CONFLICT, "This offer is " + o.getStatus());
         o.setStatus("REJECTED");
+        notifier.send(o.getFarmerId(), "OFFER", "Offer declined", "The buyer declined your offer.", "requests");
         return offerView(o);
     }
 
@@ -200,7 +218,11 @@ public class RequestService {
         offer.setUnitPrice(price);
         offer.setCurrency(p.getCurrency());
         offer.setMessage(o.message());
-        return offerView(offers.save(offer));
+        PurchaseOffer savedOffer = offers.save(offer);
+        notifier.send(r.getBuyerId(), "OFFER", "New offer on your request",
+                nameOf(farmerId) + " offered " + savedOffer.getQuantity() + " " + p.getUnit() + " of " + p.getName()
+                        + " at " + savedOffer.getUnitPrice() + " " + savedOffer.getCurrency() + ".", "requests");
+        return offerView(savedOffer);
     }
 
     @Transactional(readOnly = true)
@@ -214,6 +236,8 @@ public class RequestService {
         if (!"PENDING".equals(o.getStatus()))
             throw new ResponseStatusException(HttpStatus.CONFLICT, "This offer is " + o.getStatus());
         o.setStatus("WITHDRAWN");
+        requests.findById(o.getRequestId()).ifPresent(rq -> notifier.send(rq.getBuyerId(), "OFFER",
+                "An offer was withdrawn", nameOf(farmerId) + " withdrew an offer on " + rq.getProductName() + ".", "requests"));
         return offerView(o);
     }
 

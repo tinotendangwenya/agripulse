@@ -6,6 +6,7 @@ package com.agripulse.backend.market;
 
 import com.agripulse.backend.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import com.agripulse.backend.notifications.NotificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ public class OrderService {
     private final OrderRepository orders;
     private final ProductRepository products;
     private final UserRepository users;
+    private final NotificationService notifier;
 
     @Transactional
     public OrderResponse place(Long buyerId, OrderRequest r) {
@@ -38,7 +40,10 @@ public class OrderService {
         o.setCurrency(p.getCurrency());               // currency snapshot
         o.setTotalPrice(p.getPrice().multiply(r.quantity()).setScale(2, RoundingMode.HALF_UP));
         o.setNote(r.note());
-        return OrderResponse.of(orders.save(o));
+        Order saved = orders.save(o);
+        notifier.send(p.getSeller().getId(), "ORDER", "New order",
+                r.quantity() + " " + p.getUnit() + " of " + p.getName() + " ordered.", "orders");
+        return OrderResponse.of(saved);
     }
 
     @Transactional(readOnly = true)
@@ -57,6 +62,8 @@ public class OrderService {
         Order o = orders.findByIdAndBuyerId(id, buyerId).orElseThrow(this::notFound);
         require(o, "PENDING");
         o.setStatus("CANCELLED");
+        notifier.send(o.getProduct().getSeller().getId(), "ORDER", "Order cancelled",
+                o.getBuyer().getFullName() + " cancelled an order for " + o.getProduct().getName() + ".", "orders");
         return OrderResponse.of(o);
     }
 
@@ -71,6 +78,8 @@ public class OrderService {
         p.setQuantity(p.getQuantity().subtract(o.getQuantity()));
         if (p.getQuantity().compareTo(BigDecimal.ZERO) == 0) p.setStatus("SOLD_OUT");
         o.setStatus("CONFIRMED");
+        notifier.send(o.getBuyer().getId(), "ORDER", "Order confirmed",
+                "The farmer confirmed your order for " + o.getProduct().getName() + ".", "myorders");
         return OrderResponse.of(o);
     }
 
@@ -79,6 +88,8 @@ public class OrderService {
         Order o = orders.findByIdAndProductSellerId(id, sellerId).orElseThrow(this::notFound);
         require(o, "PENDING");
         o.setStatus("REJECTED");
+        notifier.send(o.getBuyer().getId(), "ORDER", "Order declined",
+                "The farmer could not accept your order for " + o.getProduct().getName() + ".", "myorders");
         return OrderResponse.of(o);
     }
 
@@ -87,6 +98,8 @@ public class OrderService {
         Order o = orders.findByIdAndProductSellerId(id, sellerId).orElseThrow(this::notFound);
         require(o, "CONFIRMED");
         o.setStatus("COMPLETED");
+        notifier.send(o.getBuyer().getId(), "ORDER", "Order completed",
+                "Your order for " + o.getProduct().getName() + " was marked completed.", "myorders");
         return OrderResponse.of(o);
     }
 

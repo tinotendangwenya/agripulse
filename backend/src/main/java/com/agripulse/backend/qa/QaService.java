@@ -6,6 +6,7 @@ import com.agripulse.backend.qa.QaDtos.*;
 import com.agripulse.backend.user.User;
 import com.agripulse.backend.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import com.agripulse.backend.notifications.NotificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,7 @@ public class QaService {
     private final UserRepository users;
     private final FarmRepository farms;
     private final ImageStore images;
+    private final NotificationService notifier;
 
     @Transactional
     public ThreadView ask(Long farmerId, Long farmId, String subject, String topic, String title,
@@ -54,6 +56,8 @@ public class QaService {
         q.setUpdatedAt(LocalDateTime.now());
         questions.save(q);
         addMessage(q, farmerId, "FARMER", body, image);
+        for (User ex : users.findByRoleNameAndEnabledTrue("EXPERT"))
+            notifier.send(ex.getId(), "QUESTION", "New farmer question", q.getTitle(), "queue");
         return thread(q);
     }
 
@@ -86,6 +90,17 @@ public class QaService {
         if (blank(body) && !hasFile(image)) throw bad("Write a reply or add a photo");
         addMessage(q, callerId, role, body, image);
         q.setStatus(staff ? "ANSWERED" : "OPEN");
+        if (staff) {
+            notifier.send(q.getFarmerId(), "QUESTION", "An expert answered", q.getTitle(), "questions");
+        } else {
+            java.util.Set<Long> ids = new java.util.LinkedHashSet<>();
+            for (QuestionMessage m : messages.findByQuestionIdOrderByIdAsc(q.getId()))
+                if (!"FARMER".equals(m.getAuthorRole())) ids.add(m.getAuthorId());
+            if (ids.isEmpty())
+                for (User ex : users.findByRoleNameAndEnabledTrue("EXPERT")) ids.add(ex.getId());
+            for (Long id2 : ids)
+                notifier.send(id2, "QUESTION", "A farmer replied", q.getTitle(), "queue");
+        }
         return thread(q);
     }
 
