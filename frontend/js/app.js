@@ -274,9 +274,9 @@ const TABS = {
   TRANSPORTER: [['jobs', 'Jobs'], ['vehicles', 'My vehicles'], ['prices', 'Prices']],
   EQUIPMENT_OWNER: [['myequipment', 'My equipment'], ['prices', 'Prices']],
   EXPERT: [['queue', 'Questions'], ['market', 'Market'], ['prices', 'Prices']],
-  ADMIN: [['prices', 'Prices'], ['experts', 'Experts']]
+  ADMIN: [['applications', 'Expert applications'], ['users', 'Users'], ['prices', 'Prices'], ['experts', 'Experts']]
 };
-const SCREENS = { farms, questions: questionsList, requests: requestsScreen, listings, orders, market, myorders, prices: priceHub, queue: expertQueue, experts: adminExperts, transport: transportScreen, vehicles: vehiclesScreen, jobs: jobsScreen, hire: hireScreen, myequipment: ownerEquipmentScreen };
+const SCREENS = { farms, questions: questionsList, requests: requestsScreen, listings, orders, market, myorders, prices: priceHub, queue: expertQueue, experts: adminExperts, applications: adminApplications, users: adminUsers, transport: transportScreen, vehicles: vehiclesScreen, jobs: jobsScreen, hire: hireScreen, myequipment: ownerEquipmentScreen };
 
 function nav() {
   const tabs = TABS[me.role] || TABS.BUYER;

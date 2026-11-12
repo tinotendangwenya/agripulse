@@ -8,4 +8,5 @@ public record RegisterRequest(
         @Pattern(regexp = "^\\+?[0-9]{9,15}$",
                  message = "Phone must be 9-15 digits, optionally starting with +") String phone,
         @NotBlank @Size(min = 8, max = 72) String password,
-        @NotBlank String role) {}
+        @NotBlank String role,
+        Boolean acceptedPrivacy) {}

@@ -24,6 +24,9 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest r) {
+        if (!Boolean.TRUE.equals(r.acceptedPrivacy())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Please accept the privacy notice to register");
+        }
         String email = blankToNull(r.email());
         String phone = blankToNull(r.phone());
         if (email == null && phone == null) {
@@ -46,6 +49,7 @@ public class AuthService {
 
         User u = new User();
         u.setFullName(r.fullName().trim());
+        u.setConsentAt(java.time.LocalDateTime.now());
         u.setEmail(email);
         u.setPhone(phone);
         u.setPasswordHash(encoder.encode(r.password()));

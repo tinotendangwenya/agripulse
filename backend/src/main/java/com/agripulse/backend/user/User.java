@@ -30,4 +30,10 @@ public class User {
 
     @Column(nullable = false)
     private boolean enabled = true;
+
+    @Column(name = "token_version", nullable = false)
+    private int tokenVersion = 0;
+
+    @Column(name = "consent_at")
+    private java.time.LocalDateTime consentAt;
 }

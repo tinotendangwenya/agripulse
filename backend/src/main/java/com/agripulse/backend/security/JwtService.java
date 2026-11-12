@@ -35,6 +35,7 @@ public class JwtService {
                 .subject(String.valueOf(user.getId()))
                 .claim("name", user.getFullName())
                 .claim("roles", List.of(user.getRole().getName()))
+                .claim("tv", user.getTokenVersion())
                 .build();
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
         return encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();

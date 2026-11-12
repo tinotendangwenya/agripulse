@@ -43,8 +43,11 @@
       <option value="TRANSPORTER">Transporter</option>
       <option value="EQUIPMENT_OWNER">Equipment owner</option>
     </select>
+    <div class="form-check mb-3"><input class="form-check-input" type="checkbox" name="accept" id="acc" required>
+      <label class="form-check-label small" for="acc">I have read the <a href="/privacy.html" target="_blank">privacy notice</a>.</label></div>
     <button class="btn btn-success">Create account</button>
   </form>
+  <p class="text-center small mt-3"><a href="/apply-expert.html">Apply as an agricultural expert</a> &middot; <a href="/privacy.html">Privacy notice</a></p>
 </main>
 
 <script src="/js/api.js"></script>
@@ -81,7 +84,7 @@
     const f = Object.fromEntries(new FormData(e.target));
     send('/api/auth/register', {
       fullName: f.fullName, email: f.email || null, phone: f.phone || null,
-      password: f.password, role: f.role
+      password: f.password, role: f.role, acceptedPrivacy: f.accept === 'on'
     });
   };
 </script>

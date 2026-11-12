@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Apply as an expert - AgriPulse</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/style.css" rel="stylesheet">
+</head>
+<body>
+<main class="container py-4">
+  <h3 class="text-center mb-1" style="color:#1e5631">Apply as an agricultural expert</h3>
+  <p class="text-center text-muted">Answer farmers' questions about crops and livestock. An admin reviews every application before you can log in.</p>
+  <div id="out"></div>
+  <form id="af" class="card card-body">
+    <label class="form-label small mb-0">Full name</label>
+    <input class="form-control mb-2" name="fullName" required maxlength="150">
+    <label class="form-label small mb-0">Email (optional if you give a phone)</label>
+    <input class="form-control mb-2" name="email" type="email" maxlength="255">
+    <label class="form-label small mb-0">Phone (optional if you give an email)</label>
+    <input class="form-control mb-2" name="phone" placeholder="0771234567">
+    <label class="form-label small mb-0">Password (at least 8 characters)</label>
+    <input class="form-control mb-2" name="password" type="password" minlength="8" maxlength="72" required autocomplete="new-password">
+    <label class="form-label small mb-0">Repeat the password</label>
+    <input class="form-control mb-2" name="password2" type="password" minlength="8" maxlength="72" required autocomplete="new-password">
+    <label class="form-label small mb-0">Qualification</label>
+    <input class="form-control mb-2" name="qualification" required maxlength="200" placeholder="e.g. BSc Agriculture, University of Zimbabwe">
+    <label class="form-label small mb-0">Area of expertise</label>
+    <input class="form-control mb-2" name="speciality" required maxlength="150" placeholder="e.g. maize agronomy, cattle health, horticulture">
+    <label class="form-label small mb-0">Organisation (optional)</label>
+    <input class="form-control mb-2" name="organisation" maxlength="150" placeholder="e.g. AGRITEX, a veterinary practice">
+    <label class="form-label small mb-0">Professional registration number (optional)</label>
+    <input class="form-control mb-2" name="registrationNumber" maxlength="80">
+    <label class="form-label small mb-0">Province where you work</label>
+    <select class="form-select mb-2" name="province">
+      <option>Harare</option><option>Bulawayo</option><option>Manicaland</option><option>Mashonaland Central</option>
+      <option>Mashonaland East</option><option>Mashonaland West</option><option>Masvingo</option>
+      <option>Matabeleland North</option><option>Matabeleland South</option><option>Midlands</option></select>
+    <label class="form-label small mb-0">Anything else the admin should know (optional)</label>
+    <textarea class="form-control mb-2" name="statement" rows="3" maxlength="1000"></textarea>
+    <div class="form-check mb-3"><input class="form-check-input" type="checkbox" name="accept" id="acc" required>
+      <label class="form-check-label small" for="acc">I have read the <a href="/privacy.html" target="_blank">privacy notice</a>.</label></div>
+    <button class="btn btn-success">Send application</button>
+  </form>
+  <p class="small text-muted mt-3">The admin checks your qualification outside the app, for example with the issuing body, so use details that can be checked.
+    Experts see a farmer's name, farm name, province, question and photos, but not their phone number or email.</p>
+  <p class="text-center small"><a href="/index.html">Back to log in</a></p>
+</main>
+<script src="/js/api.js"></script>
+<script>
+  const out = document.getElementById('out');
+  document.getElementById('af').onsubmit = async e => {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(e.target));
+    if (f.password !== f.password2) { out.innerHTML = '<div class="alert alert-danger">The passwords do not match.</div>'; return; }
+    const btn = e.target.querySelector('button');
+    btn.disabled = true;
+    try {
+      const r = await API.post('/api/auth/apply-expert', {
+        fullName: f.fullName, email: f.email || null, phone: f.phone || null, password: f.password,
+        qualification: f.qualification, speciality: f.speciality, organisation: f.organisation || null,
+        registrationNumber: f.registrationNumber || null, province: f.province, statement: f.statement || null,
+        acceptedPrivacy: f.accept === 'on' });
+      e.target.classList.add('d-none');
+      out.innerHTML = '<div class="alert alert-success">' + esc(r.message) + '</div>';
+    } catch (err) {
+      out.innerHTML = '<div class="alert alert-danger">' + esc(err.message) + '</div>';
+      btn.disabled = false;
+    }
+  };
+</script>
+</body>
+</html>
