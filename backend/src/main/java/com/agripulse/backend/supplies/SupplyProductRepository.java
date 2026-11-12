@@ -1,7 +1,9 @@
 package com.agripulse.backend.supplies;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -33,4 +35,8 @@ public interface SupplyProductRepository extends JpaRepository<SupplyProduct, Lo
     List<SupplyProduct> findBySupplier_UserIdAndStatusNotOrderByIdDesc(Long userId, String status);
 
     Optional<SupplyProduct> findByIdAndSupplier_UserId(Long id, Long userId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from SupplyProduct p where p.id = :id")
+    Optional<SupplyProduct> lockById(@Param("id") Long id);
 }

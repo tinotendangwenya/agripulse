@@ -81,7 +81,7 @@ async function supplierShop() {
   });
 }
 
-/* ---------- Farmers: search and compare supplies ---------- */
+/* ---------- Farmers: search, compare and order supplies ---------- */
 async function suppliesBrowse() {
   view.innerHTML = `<h5 class="mb-3">Farm supplies</h5>
     <form id="sf" class="row g-2 mb-2">
@@ -111,8 +111,74 @@ async function suppliesBrowse() {
         ${p.supplier.offersDelivery ? '<span class="badge text-bg-info">Delivers</span>' : ''}<br>
         <small class="text-muted">${esc(p.supplier.businessName)} ${p.supplier.verified ? '<span class="badge text-bg-success">Verified</span>' : ''} · ${esc(p.supplier.province)}${p.supplier.district ? ', ' + esc(p.supplier.district) : ''}${p.expiryDate ? ' · expires ' + esc(p.expiryDate) : ''}</small>
         ${p.description ? `<div class="small mt-1">${esc(p.description)}</div>` : ''}
+        ${p.inStock ? `
+        <details class="mt-2"><summary class="btn btn-success btn-sm">Order this</summary>
+          <form class="row g-2 mt-1" data-orderform="${p.id}">
+            ${input('Quantity (' + esc(p.unit) + ')', 'quantity', `type="number" step="0.01" min="0.01" max="${esc(p.stockQty)}" required`)}
+            ${select('Collect or delivery', 'deliveryMethod', p.supplier.offersDelivery ? ['PICKUP', 'DELIVERY'] : ['PICKUP'])}
+            ${select('How will you pay?', 'paymentMethod', ['CASH', 'MOBILE_MONEY', 'BANK_TRANSFER'])}
+            <div class="col-6"><label class="form-label small mb-0">Delivery address</label><input class="form-control" name="deliveryAddress" placeholder="Only for delivery"></div>
+            <div class="col-12"><input class="form-control" name="note" placeholder="Note to the supplier (optional)"></div>
+            <div class="col-12"><button class="btn btn-success w-100">Send order</button></div>
+          </form></details>` : ''}
       </div></div>`).join('') : '<p class="text-muted">No supplies match your search.</p>';
+
+    $('sres').querySelectorAll('[data-orderform]').forEach(frm => frm.onsubmit = submit(async v => {
+      await API.post('/api/supplies/orders', { productId: Number(frm.dataset.orderform), quantity: num(v.quantity),
+        deliveryMethod: v.deliveryMethod, deliveryAddress: v.deliveryAddress || null,
+        paymentMethod: v.paymentMethod, note: v.note || null });
+      alert('Order sent. The supplier must confirm it.');
+      location.hash = 'mysupplyorders';
+    }));
   };
   $('sf').onsubmit = submit(f => load(f));
   await load({});
+}
+
+const supplyPayBadge = s => `<span class="badge text-bg-${s === 'PAID' ? 'success' : 'warning'}">${esc(s)}</span>`;
+
+/* ---------- Farmer: my supply orders ---------- */
+async function mySupplyOrders() {
+  const list = await API.get('/api/supplies/orders/mine');
+  view.innerHTML = `<h5 class="mb-3">My supply orders</h5>` + (list.length ? list.map(o => `
+    <div class="card mb-2"><div class="card-body">
+      <div class="d-flex justify-content-between"><strong>${esc(o.productName)}</strong>${badge(o.status)}</div>
+      <small class="text-muted">${esc(o.quantity)} ${esc(o.unit)} · total ${Number(o.totalPrice).toFixed(2)} ${esc(o.currency)} · ${esc(String(o.createdAt).slice(0, 10))}</small><br>
+      ${supplyPayBadge(o.paymentStatus)} <span class="badge text-bg-light">${esc(o.paymentMethod)}</span> <span class="badge text-bg-light">${esc(o.deliveryMethod)}</span>
+      ${o.deliveryAddress ? `<div class="small mt-1">Deliver to: ${esc(o.deliveryAddress)}</div>` : ''}
+      <div class="small mt-1">Supplier: ${esc(o.supplierName)} · ${esc(o.supplierPhone)}</div>
+      ${o.note ? `<div class="small">Note: ${esc(o.note)}</div>` : ''}
+      ${o.status === 'PENDING' ? `<div class="mt-2"><button class="btn btn-outline-danger btn-sm" data-sc="${o.id}">Cancel order</button></div>` : ''}
+    </div></div>`).join('') : '<p class="text-muted">You have not ordered any supplies yet.</p>');
+  view.querySelectorAll('[data-sc]').forEach(b => b.onclick = async () => {
+    if (!confirm('Cancel this order?')) return;
+    try { await API.post(`/api/supplies/orders/${b.dataset.sc}/cancel`); run(mySupplyOrders()); } catch (e) { alert(e.message); }
+  });
+}
+
+/* ---------- Supplier: orders from farmers ---------- */
+async function supplierOrders() {
+  const list = await API.get('/api/supplies/orders/incoming');
+  const buttons = o => {
+    const b = [];
+    if (o.status === 'PENDING') { b.push(['confirm', 'Confirm', 'success']); b.push(['reject', 'Reject', 'outline-danger']); }
+    if (o.status === 'CONFIRMED') b.push(o.deliveryMethod === 'DELIVERY' ? ['dispatch', 'Mark dispatched', 'primary'] : ['complete', 'Mark collected', 'primary']);
+    if (o.status === 'DISPATCHED') b.push(['complete', 'Mark delivered', 'primary']);
+    if (o.paymentStatus === 'UNPAID' && ['CONFIRMED', 'DISPATCHED', 'COMPLETED'].includes(o.status)) b.push(['paid', 'Mark as paid', 'outline-success']);
+    return b.map(([act, label, cls]) => `<button class="btn btn-${cls} btn-sm me-1 mb-1" data-sa="${act}" data-id="${o.id}">${label}</button>`).join('');
+  };
+  view.innerHTML = `<h5 class="mb-3">Shop orders</h5>` + (list.length ? list.map(o => `
+    <div class="card mb-2"><div class="card-body">
+      <div class="d-flex justify-content-between"><strong>${esc(o.productName)}</strong>${badge(o.status)}</div>
+      <small class="text-muted">${esc(o.quantity)} ${esc(o.unit)} · total ${Number(o.totalPrice).toFixed(2)} ${esc(o.currency)} · ${esc(String(o.createdAt).slice(0, 10))}</small><br>
+      ${supplyPayBadge(o.paymentStatus)} <span class="badge text-bg-light">${esc(o.paymentMethod)}</span> <span class="badge text-bg-light">${esc(o.deliveryMethod)}</span>
+      <div class="small mt-1">Farmer: ${esc(o.buyerName)} · ${esc(o.buyerPhone || 'no phone')}</div>
+      ${o.deliveryAddress ? `<div class="small">Deliver to: ${esc(o.deliveryAddress)}</div>` : ''}
+      ${o.note ? `<div class="small">Note: ${esc(o.note)}</div>` : ''}
+      <div class="mt-2">${buttons(o)}</div>
+    </div></div>`).join('') : '<p class="text-muted">No orders yet.</p>');
+  view.querySelectorAll('[data-sa]').forEach(b => b.onclick = async () => {
+    if (b.dataset.sa === 'reject' && !confirm('Reject this order?')) return;
+    try { await API.post(`/api/supplies/orders/${b.dataset.id}/${b.dataset.sa}`); run(supplierOrders()); } catch (e) { alert(e.message); }
+  });
 }
